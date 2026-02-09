@@ -1,9 +1,8 @@
-# Node
+# Node dependencies (instalamos dentro del contenedor)
 node_modules/
 npm-debug.log*
-yarn-error.log*
 
-# Reportes y resultados de tests
+# Reportes y resultados
 allure-results/
 allure-report/
 playwright-report/
@@ -21,3 +20,7 @@ playwright-report.zip
 .idea/
 .DS_Store
 Thumbs.db
+
+# Git
+.git
+.gitignore
