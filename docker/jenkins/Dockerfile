@@ -1,49 +1,43 @@
-# ===============================
-# Jenkins LTS - Orquestador CI
-# ===============================
+# 1️⃣ Base
 FROM jenkins/jenkins:lts
 
-# Ejecutar como root solo para instalar dependencias
 USER root
 
-# -------------------------------
-# Dependencias mínimas necesarias
-# -------------------------------
+# 2️⃣ Instalar dependencias básicas + Docker CLI
 RUN apt-get update && apt-get install -y \
-    git \
+    sudo \
     curl \
-    ca-certificates \
+    unzip \
     gnupg \
     lsb-release \
-    unzip \
-    openjdk-11-jdk \
+    ca-certificates \
+    git \
+    docker.io \
     && rm -rf /var/lib/apt/lists/*
 
-# -------------------------------
-# Instalar Docker CLI
-# -------------------------------
-RUN curl -fsSL https://get.docker.com | sh
+# 3️⃣ Instalar Node.js LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
-# Permitir que Jenkins use Docker
-RUN usermod -aG docker jenkins
+# 4️⃣ Instalar Playwright y navegadores
+RUN npm install -g playwright \
+    && npx playwright install --with-deps
 
-# -------------------------------
-# Instalar Allure CLI
-# -------------------------------
-ENV ALLURE_VERSION=2.35.0
-RUN wget https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.zip -O /tmp/allure.zip \
+# 5️⃣ Instalar Allure CLI
+RUN curl -L https://github.com/allure-framework/allure2/releases/download/2.36.0/allure-2.36.0.zip -o /tmp/allure.zip \
     && unzip /tmp/allure.zip -d /opt/ \
-    && ln -s /opt/allure-${ALLURE_VERSION}/bin/allure /usr/bin/allure \
+    && ln -s /opt/allure-2.36.0/bin/allure /usr/bin/allure \
     && rm /tmp/allure.zip
 
-# -------------------------------
-# Ajustes finales
-# -------------------------------
-# Volver a usuario Jenkins (NO root)
+# 6️⃣ Preinstalar pw-allure-testqa (Playwright + Node + Allure)
+# Aquí simplemente instalamos dependencias globales para simular la imagen
+RUN npm install -g npm@latest \
+    && npm install -g allure-playwright
+
+# 7️⃣ Dar permisos de Docker al usuario Jenkins
+RUN usermod -aG docker jenkins
+
 USER jenkins
 
-# Puertos Jenkins
-EXPOSE 8080 50000
-
-# EntryPoint estándar
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/jenkins.sh"]
+# Contenedor listo para Jenkins con Playwright y Allure
